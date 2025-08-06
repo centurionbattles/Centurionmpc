@@ -1,61 +1,35 @@
 console.log("script loaded"); // Confirm script runs
-
-// --- Multiplayer WebSocket Setup ---
-const socket = new WebSocket('wss://centurionmpc.onrender.com'); // ⬅️ Replace with your actual WebSocket URL
-let myPlayerId = null;
-let isMyTurn = false;
-let multiplayerMode = true;
-
-socket.onopen = () => {
-  console.log("Connected to WebSocket server");
-};
-
-socket.onmessage = (event) => {
-  const msg = JSON.parse(event.data);
-
-  if (msg.type === 'init') {
-    myPlayerId = msg.player;
-    isMyTurn = (myPlayerId === 2); // White starts
-    updateTurnDisplay();
-  } else if (msg.type === 'move') {
-    const { from, to } = msg;
-    movePiece(from.r, from.c, to.r, to.c, false); // don't re-send
-    isMyTurn = true;
-    updateTurnDisplay();
-  } else if (msg.type === 'player_left') {
-    alert(msg.message);
-    boardElement.style.pointerEvents = 'none';
-  }
-};
-
 const boardElement = document.getElementById('board');
 const turnDisplay = document.getElementById('turnDisplay');
 const promotionModal = document.getElementById('promotionModal');
 const promotionOptions = document.getElementById('promotionOptions');
 
 const boardSize = 10;
+
 let board = [];
 let selectedPiece = null;
-let currentPlayer = 2;
+let currentPlayer = 2; // 1 = Black, 2 = White
 let validMoves = [];
-let moveTimeSeconds = 30;
+let moveTimeSeconds = 30; // seconds per move
 let timeLeft = moveTimeSeconds;
 let timerId = null;
 const timerDisplay = document.getElementById('timerDisplay');
+
 let blackPoints = 0;
 let whitePoints = 0;
 const blackPointsDisplay = document.getElementById('blackPoints');
 const whitePointsDisplay = document.getElementById('whitePoints');
 
+// Assign points for each piece type
 const piecePoints = {
-  K: 20,
-  Q: 12,
-  R: 4,
-  B: 4,
-  N: 3,
-  A: 3,
-  W: 6,
-  P: 1
+  K: 20, // King
+  Q: 12, // Queen
+  R: 4,  // Rook
+  B: 4,  // Bishop
+  N: 3,  // Knight
+  A: 3,  // Archer
+  W: 6,  // Diplomat
+  P: 1   // Pawn
 };
 
 function switchPlayer() {
@@ -63,23 +37,22 @@ function switchPlayer() {
   updateTurnDisplay();
   resetTimer();
 }
-
 const piecesUnicode = {
-  P: '♟',
-  R: '♜',
-  N: '♞',
-  B: '♝',
-  Q: '♛',
-  K: '♚',
-  A: '🝢',
-  W: 'Ӂ'
+  P: '♟', // Pawn
+  R: '♜', // Rook
+  N: '♞', // Knight
+  B: '♝', // Bishop
+  Q: '♛', // Queen
+  K: '♚', // King
+  A: 'A', // Archer
+  W: 'D'  // Diplomat
 };
 
 function createEmptyBoard() {
   board = [];
-  for (let r = 0; r < boardSize; r++) {
+  for(let r=0; r<boardSize; r++){
     const row = [];
-    for (let c = 0; c < boardSize; c++) {
+    for(let c=0; c<boardSize; c++){
       row.push(null);
     }
     board.push(row);
@@ -87,50 +60,53 @@ function createEmptyBoard() {
 }
 
 function setupPieces() {
+  // Black side (player 1) top rows
   const blackPiecesRow = [
-    {type:'R'}, {type:'N'}, {type:'B'}, {type:'W'}, {type:'Q'}, {type:'K'}, {type:'W'}, {type:'B'}, {type:'N'}, {type:'R'}
+    {type:'R'}, {type:'N'}, {type:'B'},{type:'W'}, {type:'Q'}, {type:'K'}, {type:'W'}, {type:'B'}, {type:'N'}, {type:'R'}
   ];
   const blackPiecesRow2 = [
-    {type:'P'}, {type:'P'}, {type:'P'}, {type:'P'}, {type:'A'}, {type:'A'}, {type:'P'}, {type:'P'}, {type:'P'}, {type:'P'}
+    {type:'P'}, {type:'P'}, {type:'P'},{type:'P'}, {type:'A'}, {type:'A'}, {type:'P'}, {type:'P'}, {type:'P'}, {type:'P'}
   ];
-  for (let c = 0; c < boardSize; c++) {
-    board[0][c] = { ...blackPiecesRow[c], player: 1 };
-    board[1][c] = { ...blackPiecesRow2[c], player: 1 };
+  for(let c=0; c<boardSize; c++) {
+    board[0][c] = {...blackPiecesRow[c], player:1};
+    board[1][c] = {...blackPiecesRow2[c], player:1};
   }
 
+  // White side (player 2) bottom rows
   const whitePiecesRow = [
-    {type:'R'}, {type:'N'}, {type:'B'}, {type:'W'}, {type:'Q'}, {type:'K'}, {type:'W'}, {type:'B'}, {type:'N'}, {type:'R'}
+    {type:'R'}, {type:'N'}, {type:'B'},{type:'W'}, {type:'Q'}, {type:'K'}, {type:'W'}, {type:'B'}, {type:'N'}, {type:'R'} ]
+    const WhitePiecesRow2 = [
+    {type:'P'}, {type:'P'}, {type:'P'},{type:'P'}, {type:'A'}, {type:'A'}, {type:'P'}, {type:'P'}, {type:'P'}, {type:'P'}
   ];
-  const WhitePiecesRow2 = [
-    {type:'P'}, {type:'P'}, {type:'P'}, {type:'P'}, {type:'A'}, {type:'A'}, {type:'P'}, {type:'P'}, {type:'P'}, {type:'P'}
-  ];
-  for (let c = 0; c < boardSize; c++) {
-    board[9][c] = { ...whitePiecesRow[c], player: 2 };
-    board[8][c] = { ...WhitePiecesRow2[c], player: 2 };
+  for(let c=0; c<boardSize; c++) {
+    board[9][c] = {...whitePiecesRow[c], player:2};
+    board[8][c] = {...WhitePiecesRow2[c], player:2};
   }
 }
 
 function renderBoard() {
   boardElement.innerHTML = '';
-  for (let r = 0; r < boardSize; r++) {
-    for (let c = 0; c < boardSize; c++) {
+  for(let r=0; r<boardSize; r++){
+    for(let c=0; c<boardSize; c++){
       const sq = document.createElement('div');
       sq.classList.add('square');
-      sq.classList.add((r + c) % 2 === 0 ? 'light' : 'dark');
+      sq.classList.add( (r+c) % 2 === 0 ? 'light' : 'dark' );
       sq.dataset.row = r;
       sq.dataset.col = c;
 
       const piece = board[r][c];
-      if (piece) {
+      if(piece){
         sq.textContent = piecesUnicode[piece.type];
         sq.style.color = piece.player === 1 ? 'black' : 'white';
       }
 
-      if (selectedPiece && selectedPiece.r === r && selectedPiece.c === c) {
+      // Highlight selected
+      if(selectedPiece && selectedPiece.r === r && selectedPiece.c === c){
         sq.classList.add('highlight');
       }
 
-      if (validMoves.some(m => m[0] === r && m[1] === c)) {
+      // Show valid move dots
+      if(validMoves.some(m => m[0] === r && m[1] === c)){
         const dot = document.createElement('div');
         dot.classList.add('valid-move-dot');
         sq.appendChild(dot);
@@ -143,21 +119,18 @@ function renderBoard() {
 }
 
 function onSquareClick(r, c) {
-  if (!isMyTurn && multiplayerMode) return;
-
   const clickedPiece = board[r][c];
 
-  if (!selectedPiece) {
-    if (clickedPiece && clickedPiece.player === currentPlayer) {
-      selectedPiece = { r, c, piece: clickedPiece };
-      validMoves = getValidMoves(r, c);
+  // If no piece selected yet
+  if(!selectedPiece){
+    if(clickedPiece && clickedPiece.player === currentPlayer){
+      selectedPiece = {r, c, piece: clickedPiece};
+      validMoves = getValidMoves(r,c);
       renderBoard();
     }
     return;
   }
 
-  // (rest of the function continues...)
-}
   // Diplomat conversion logic (special case)
   if(selectedPiece.piece.type === 'W'){
     // Check if clicked square is adjacent and enemy piece (not king)
@@ -521,10 +494,5 @@ function resetRound() {
 }
 
 initGame();
-
-
-
-
-
 
 

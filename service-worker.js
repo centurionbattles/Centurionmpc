@@ -1,21 +1,22 @@
+const CACHE_NAME = 'centurion-cache-v1';
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/style.css',
+  '/script.js',
+  '/manifest.json'
+];
+
 self.addEventListener('install', function(event) {
   event.waitUntil(
-    caches.open('centurion-cache-v1').then(function(cache) {
-      return cache.addAll([
-        './',
-        './index.html',
-        './style.css',
-        './script.js',
-        './manifest.json'
-      ]);
-    })
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(urlsToCache))
   );
 });
 
 self.addEventListener('fetch', function(event) {
   event.respondWith(
-    caches.match(event.request).then(function(response) {
-      return response || fetch(event.request);
-    })
+    caches.match(event.request)
+      .then(response => response || fetch(event.request))
   );
 });
