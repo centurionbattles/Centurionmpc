@@ -1,7 +1,7 @@
 console.log("script loaded"); // Confirm script runs
 
 // --- Multiplayer WebSocket Setup ---
-const socket = new WebSocket('wss://your-app-name.onrender.com'); // ⬅️ Replace with your actual WebSocket URL
+const socket = new WebSocket('https://centurionmpc.onrender.com'); // ⬅️ Replace with your actual WebSocket URL
 let myPlayerId = null;
 let isMyTurn = false;
 let multiplayerMode = true;
@@ -521,6 +521,7 @@ function resetRound() {
 }
 
 initGame();
+
 
 
 
