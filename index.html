@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Centurion Game</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <div id="sidePanel">
+    <h1 id="mainHeading">Centurion- Battle of the legends</h1>
+    <div id="turnDisplay"></div>
+    <div id="timerDisplay">Time Left: 30s</div>
+    <div id="pointsDisplay">
+      <div>Black Points: <span id="blackPoints">0</span></div>
+      <div>White Points: <span id="whitePoints">0</span></div>
+    </div>
+    <div id="roundDisplay">Round: <span id="roundNum">1</span></div>
+    <div id="previousScores">
+      <h3>Previous Rounds</h3>
+      <table id="scoreHistory" style="width:100%; color:#ffe066; background:#222; border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="border-bottom:1px solid #ffe066;">Round</th>
+            <th style="border-bottom:1px solid #ffe066;">Black</th>
+            <th style="border-bottom:1px solid #ffe066;">White</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div id="totalScores">
+      <h3>Total Score</h3>
+      <table style="width:100%; color:#ffe066; background:#222; border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="border-bottom:1px solid #ffe066;">Black</th>
+            <th style="border-bottom:1px solid #ffe066;">White</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id="totalBlackScore" style="text-align:center;">0</td>
+            <td id="totalWhiteScore" style="text-align:center;">0</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div id="mainContent">
+    <div id="board"></div>
+    <div id="promotionModal">
+      <div>Choose promotion:</div>
+      <div id="promotionOptions"></div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>

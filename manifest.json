@@ -1,0 +1,9 @@
+{
+  "name": "Centurion Game",
+  "short_name": "Centurion",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#222",
+  "theme_color": "#ffe066",
+  "icons": []
+}
